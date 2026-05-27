@@ -1,26 +1,104 @@
 @import "tailwindcss";
+@import "98.css/dist/98.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* --- WIN98 DESKTOP --- */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  font-family: "MS Sans Serif", "Microsoft Sans Serif", sans-serif;
+  background-color: #008080;
+  user-select: none;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* --- DESKTOP ICONS --- */
+.desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 75px;
+  padding: 4px;
+  cursor: pointer;
+  color: white;
+  font-size: 11px;
+  text-align: center;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.desktop-icon:hover {
+  background: rgba(0, 0, 128, 0.3);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.desktop-icon .icon-img {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+  image-rendering: pixelated;
+}
+
+/* --- WINDOW DRAGGING --- */
+.window-drag-handle {
+  cursor: move;
+}
+
+/* --- TIMELINE GRID --- */
+.timeline-grid {
+  background-color: #c0c0c0;
+}
+
+.timeline-beat {
+  border-right: 1px solid #808080;
+}
+
+.timeline-bar {
+  border-right: 2px solid #404040;
+}
+
+/* --- PIANO ROLL --- */
+.piano-roll-note {
+  border-radius: 2px;
+  border: 1px solid #000;
+  cursor: pointer;
+}
+
+.piano-roll-note.selected {
+  border-color: #ff0;
+  box-shadow: 0 0 2px #ff0;
+}
+
+/* --- WAVEFORM --- */
+.waveform-clip {
+  border: 1px solid #404040;
+  cursor: pointer;
+}
+
+.waveform-clip.selected {
+  border-color: #ff0;
+  box-shadow: 0 0 3px #ff0;
+}
+
+/* --- SUNKEN PANEL OVERRIDES --- */
+.sunken-area {
+  border: 2px solid;
+  border-color: #808080 #fff #fff #808080;
+  background: #c0c0c0;
+}
+
+/* --- CUSTOM SCROLLBAR --- */
+::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+::-webkit-scrollbar-track {
+  background: #c0c0c0;
+}
+::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #fff #808080 #808080 #fff;
+}
+
+/* --- CANVAS STYLES --- */
+canvas {
+  display: block;
 }
