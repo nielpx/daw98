@@ -59,6 +59,8 @@ export default function PianoRoll({
   const resizeStartRef = useRef({ clientX: 0, origDuration: 0, noteStartBeat: 0 });
   const [movingId, setMovingId] = useState<string | null>(null);
   const moveStartRef = useRef({ clientX: 0, clientY: 0, origStartTime: 0, origPitch: 0 });
+  const moveStartWorldRef = useRef({ beat: 0, pitch: 0 });
+  const moveOrigNotesRef = useRef<Map<string, { startTime: number; pitch: number }>>(new Map());
 
   // ── Box‑select state ──
   const [boxSelecting, setBoxSelecting] = useState(false);
@@ -73,6 +75,7 @@ export default function PianoRoll({
     deltaPitch: number;
   } | null>(null);
   const copyDragStartRef = useRef({ clientX: 0, clientY: 0 });
+  const copyDragStartWorldRef = useRef({ beat: 0, pitch: 0 });
 
   // ── Auto‑scroll refs ──
   const lastMousePosRef = useRef({ clientX: 0, clientY: 0 });
@@ -84,6 +87,7 @@ export default function PianoRoll({
   copyDragDataRef.current = copyDragData;
 
   const syncingScroll = useRef(false);
+  const dragFinishedRef = useRef(false);
 
   // ── Auto‑scroll function refs (updated each render to avoid stale closures) ──
   const processDragMoveRef = useRef<(clientX: number, clientY: number) => void>(() => {});
@@ -94,23 +98,21 @@ export default function PianoRoll({
     const mid = movingIdRef.current;
     if (mid) {
       const { beat, pitch } = mouseToWorld(clientX, clientY);
-      const startWorld = mouseToWorld(moveStartRef.current.clientX, moveStartRef.current.clientY);
-      const deltaBeat = beat - startWorld.beat;
-      const deltaPitch = pitch - startWorld.pitch;
+      const deltaBeat = beat - moveStartWorldRef.current.beat;
+      const deltaPitch = pitch - moveStartWorldRef.current.pitch;
       const currentSelection = useStore.getState().selectedNoteIds;
       const idsToMove = currentSelection.length > 1 ? currentSelection : [mid];
       idsToMove.forEach(noteId => {
-        const note = track.midiNotes.find(n => n.id === noteId);
-        if (!note) return;
-        let newStart = note.startTime + deltaBeat;
+        const orig = moveOrigNotesRef.current.get(noteId);
+        if (!orig) return;
+        let newStart = orig.startTime + deltaBeat;
         if (snapToGrid) newStart = snapBeat(newStart);
-        const newPitch = Math.min(NOTE_MAX_PITCH, Math.max(NOTE_MIN_PITCH, note.pitch + deltaPitch));
+        const newPitch = Math.min(NOTE_MAX_PITCH, Math.max(NOTE_MIN_PITCH, orig.pitch + deltaPitch));
         updateMidiNote(trackId, noteId, { startTime: Math.max(patternStart, newStart), pitch: newPitch });
       });
     } else if (copyDragDataRef.current) {
       const { beat, pitch } = mouseToWorld(clientX, clientY);
-      const startWorld = mouseToWorld(copyDragStartRef.current.clientX, copyDragStartRef.current.clientY);
-      setCopyDragData(prev => prev ? { ...prev, deltaBeat: beat - startWorld.beat, deltaPitch: pitch - startWorld.pitch } : null);
+      setCopyDragData(prev => prev ? { ...prev, deltaBeat: beat - copyDragStartWorldRef.current.beat, deltaPitch: pitch - copyDragStartWorldRef.current.pitch } : null);
     }
   };
 
@@ -225,6 +227,7 @@ export default function PianoRoll({
 
   /* ── Mouse handlers ── */
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    dragFinishedRef.current = false;
     // Ignore clicks on scrollbar chrome
     if (scrollRef.current) {
       const rect = scrollRef.current.getBoundingClientRect();
@@ -257,6 +260,7 @@ export default function PianoRoll({
       const noteId = noteBody.dataset.noteId!;
       const note = track.midiNotes.find(n => n.id === noteId);
       if (!note) return;
+      setDefaultNoteLength(note.duration);
 
       if (tool === "erase") { removeMidiNote(trackId, noteId); return; }
 
@@ -264,6 +268,8 @@ export default function PianoRoll({
       if (ctrl && tool === "select") {
         const currentSelection = useStore.getState().selectedNoteIds;
         if (currentSelection.includes(noteId) && currentSelection.length > 0) {
+          const { beat: copyWorldBeat, pitch: copyWorldPitch } = mouseToWorld(e.clientX, e.clientY);
+          copyDragStartWorldRef.current = { beat: copyWorldBeat, pitch: copyWorldPitch };
           const selectedNotes = track.midiNotes.filter(n => currentSelection.includes(n.id));
           setCopyDragData({
             origNotes: selectedNotes.map(n => ({ startTime: n.startTime, pitch: n.pitch, duration: n.duration, velocity: n.velocity })),
@@ -289,7 +295,16 @@ export default function PianoRoll({
 
       // Normal click — select AND allow immediate move
       pushUndo(trackId);
+      const { beat: moveWorldBeat, pitch: moveWorldPitch } = mouseToWorld(e.clientX, e.clientY);
+      moveStartWorldRef.current = { beat: moveWorldBeat, pitch: moveWorldPitch };
       const currentSelection = useStore.getState().selectedNoteIds;
+      const allAffected = currentSelection.length > 1 ? currentSelection : [noteId];
+      const origMap = new Map<string, { startTime: number; pitch: number }>();
+      allAffected.forEach(id => {
+        const n = track.midiNotes.find(nn => nn.id === id);
+        if (n) origMap.set(id, { startTime: n.startTime, pitch: n.pitch });
+      });
+      moveOrigNotesRef.current = origMap;
       if (currentSelection.includes(noteId) && currentSelection.length > 1) {
         // Keep the multi‑selection and start moving all selected notes
         setMovingId(noteId);
@@ -335,13 +350,12 @@ export default function PianoRoll({
       boxStartRef.current = { beat, pitch };
       setBoxEnd({ beat, pitch });
     }
-  }, [trackId, track.midiNotes, tool, snapToGrid, zoomH, getGridInterval, defaultNoteLength, mouseToWorld, addMidiNote, removeMidiNote, toggleNoteSelection, setSelectedNoteIds, patternStart, patternLength, clipId, pushUndo]);
+  }, [trackId, track.midiNotes, tool, snapToGrid, zoomH, getGridInterval, defaultNoteLength, mouseToWorld, addMidiNote, removeMidiNote, toggleNoteSelection, setSelectedNoteIds, patternStart, patternLength, clipId, pushUndo, setDefaultNoteLength]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (copyDragData) {
       const { beat, pitch } = mouseToWorld(e.clientX, e.clientY);
-      const startWorld = mouseToWorld(copyDragStartRef.current.clientX, copyDragStartRef.current.clientY);
-      setCopyDragData(prev => prev ? { ...prev, deltaBeat: beat - startWorld.beat, deltaPitch: pitch - startWorld.pitch } : null);
+      setCopyDragData(prev => prev ? { ...prev, deltaBeat: beat - copyDragStartWorldRef.current.beat, deltaPitch: pitch - copyDragStartWorldRef.current.pitch } : null);
       lastMousePosRef.current = { clientX: e.clientX, clientY: e.clientY };
       checkAutoScrollRef.current(e.clientX, e.clientY);
       return;
@@ -363,19 +377,18 @@ export default function PianoRoll({
 
     if (movingId) {
       const { beat, pitch } = mouseToWorld(e.clientX, e.clientY);
-      const startWorld = mouseToWorld(moveStartRef.current.clientX, moveStartRef.current.clientY);
-      const deltaBeat = beat - startWorld.beat;
-      const deltaPitch = pitch - startWorld.pitch;
+      const deltaBeat = beat - moveStartWorldRef.current.beat;
+      const deltaPitch = pitch - moveStartWorldRef.current.pitch;
 
       const currentSelection = useStore.getState().selectedNoteIds;
       const idsToMove = currentSelection.length > 1 ? currentSelection : [movingId];
 
       idsToMove.forEach(noteId => {
-        const note = track.midiNotes.find(n => n.id === noteId);
-        if (!note) return;
-        let newStart = note.startTime + deltaBeat;
+        const orig = moveOrigNotesRef.current.get(noteId);
+        if (!orig) return;
+        let newStart = orig.startTime + deltaBeat;
         if (snapToGrid) newStart = snapBeat(newStart);
-        const newPitch = Math.min(NOTE_MAX_PITCH, Math.max(NOTE_MIN_PITCH, note.pitch + deltaPitch));
+        const newPitch = Math.min(NOTE_MAX_PITCH, Math.max(NOTE_MIN_PITCH, orig.pitch + deltaPitch));
         updateMidiNote(trackId, noteId, { startTime: Math.max(patternStart, newStart), pitch: newPitch });
       });
       lastMousePosRef.current = { clientX: e.clientX, clientY: e.clientY };
@@ -397,6 +410,8 @@ export default function PianoRoll({
   }, [isDrawing, drawNoteId, resizingId, movingId, boxSelecting, copyDragData, trackId, snapToGrid, snapBeat, mouseToWorld, updateMidiNote, patternStart, zoomH, getGridInterval]);
 
   const handleMouseUp = useCallback(() => {
+    if (dragFinishedRef.current) return;
+    dragFinishedRef.current = true;
     if (copyDragData) {
       if (copyDragData.deltaBeat === 0 && copyDragData.deltaPitch === 0) {
         setCopyDragData(null);
@@ -637,33 +652,41 @@ export default function PianoRoll({
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
-  // ── Wheel zoom ──
+  // ── Wheel zoom (with deltaY accumulation for smooth scroll devices) ──
+  const wheelAccumRef = useRef(0);
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
-      if (e.altKey) {
-        e.preventDefault();
-        setZoomH(z => Math.max(0.25, Math.min(4, z + (e.deltaY > 0 ? -0.25 : 0.25))));
-        return;
-      }
-      if (e.ctrlKey) {
-        e.preventDefault();
-        setZoomV(z => Math.max(0.5, Math.min(3, z + (e.deltaY > 0 ? -0.25 : 0.25))));
-        return;
+      const zoomTarget = e.altKey ? "h" : e.ctrlKey ? "v" : null;
+      if (!zoomTarget) return;
+      e.preventDefault();
+      wheelAccumRef.current += e.deltaY;
+      const threshold = 20;
+      const steps = Math.floor(Math.abs(wheelAccumRef.current) / threshold);
+      if (steps === 0) return;
+      const dir = wheelAccumRef.current > 0 ? -1 : 1;
+      wheelAccumRef.current -= dir * -1 * steps * threshold;
+      if (zoomTarget === "h") {
+        setZoomH(z => Math.max(0.25, Math.min(4, z + dir * 0.25 * steps)));
+      } else {
+        setZoomV(z => Math.max(0.5, Math.min(3, z + dir * 0.25 * steps)));
       }
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
-  // ── Cancel copy‑drag on mouseup anywhere ──
+  // ── Window mouseup — finalize drag when released outside piano roll ──
   useEffect(() => {
-    if (!copyDragData) return;
-    const onWindowMouseUp = () => setCopyDragData(null);
+    if (!movingId && !copyDragData) return;
+    const onWindowMouseUp = () => {
+      if (!movingIdRef.current && !copyDragDataRef.current) return;
+      handleMouseUp();
+    };
     window.addEventListener("mouseup", onWindowMouseUp);
     return () => window.removeEventListener("mouseup", onWindowMouseUp);
-  }, [copyDragData]);
+  }, [movingId, copyDragData, handleMouseUp]);
 
   const cursorStyle = copyDragData ? "copy" : boxSelecting ? "crosshair" : resizingId || movingId ? "grabbing" : tool === "draw" ? "crosshair" : tool === "erase" ? "pointer" : "default";
 
@@ -752,7 +775,7 @@ export default function PianoRoll({
       </div>
 
       {/* ── Canvas ── */}
-      <div ref={scrollRef} className="flex-1 overflow-auto sunken-area min-h-0" onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} style={{ cursor: cursorStyle, position: "relative", transform: "translateZ(0)", willChange: "transform" }}>
+      <div ref={scrollRef} className="flex-1 overflow-auto sunken-area min-h-0" onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} style={{ cursor: cursorStyle, position: "relative", transform: "translateZ(0)", willChange: "transform" }}>
         {/* Ruler with hierarchical bibliography labels */}
         <div className="sticky top-0 z-15" style={{ marginLeft: PIANO_KEY_WIDTH, width: canvasWidth, height: RULER_HEIGHT, backgroundColor: "#d4d0c8", borderBottom: "1px solid #808080", position: "relative", overflow: "hidden" }}>
           {/* Bar labels */}
