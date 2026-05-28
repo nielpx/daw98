@@ -68,9 +68,9 @@ class ThreeOscProcessor extends AudioWorkletProcessor {
     this.sr = sampleRate;
 
     this.p = {
-      osc1: { waveform: 'saw', vol: 0.8, pan: -0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: 'free', unisonBlend: 100, driftAmount: 0 },
-      osc2: { waveform: 'square', vol: 0.4, pan: 0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: 'free', unisonBlend: 100, driftAmount: 0 },
-      osc3: { waveform: 'sine', vol: 0.2, pan: 0, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: 'free', unisonBlend: 100, driftAmount: 0 },
+      osc1: { waveform: 'saw', vol: 0.8, pan: -0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: 'free', unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
+      osc2: { waveform: 'square', vol: 0.4, pan: 0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: 'free', unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
+      osc3: { waveform: 'sine', vol: 0.2, pan: 0, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: 'free', unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
       delay: 0, attack: 0.01, hold: 0, decay: 0.1, sustain: 0.7, release: 0.3, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
       filterFreq: 3000, filterRes: 0.5, filterType: 0, filterEnv: 3000,
       masterGain: 0.7,
@@ -142,7 +142,7 @@ class ThreeOscProcessor extends AudioWorkletProcessor {
     var on = ['osc1','osc2','osc3'];
     for (var o = 0; o < 3; o++) {
       var osc = this.p[on[o]];
-      var n = Math.max(1, Math.min(8, (osc && osc.unisonVoices) || 1));
+      var n = Math.max(1, Math.min(16, (osc && osc.unisonVoices) || 1));
       this.vUn[v * 3 + o] = n;
       var pm = (osc && osc.phaseMode) || 'free';
       var pa = ((osc && osc.unisonPhase !== undefined ? osc.unisonPhase : 50) / 100);
@@ -273,7 +273,8 @@ class ThreeOscProcessor extends AudioWorkletProcessor {
             var bg = vol / Math.sqrt(nu);
             var gt = 1 - 0.3 * Math.abs(pos);
             var vg = bg * gt * (0.3 + 0.7 * bl);
-            var ps = Math.min(0.9, (dc / 100) * 0.9) * bl;
+            var spd = (osc.unisonSpread !== undefined ? osc.unisonSpread : 50) / 100;
+            var ps = Math.min(0.9, spd * 0.9) * bl;
             var pt = nu > 1 ? u / (nu - 1) : 0.5;
             var vp = cl(bp + (pt * 2 - 1) * ps, -1, 1);
             var va = 0.2 + 0.8 * vel;

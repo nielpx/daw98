@@ -31,49 +31,49 @@ interface PresetData {
 const PRESETS: PresetData[] = [
   {
     name: "Init",
-    osc1: { waveform: "saw", vol: 0.8, pan: -0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
-    osc2: { waveform: "square", vol: 0.4, pan: 0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
-    osc3: { waveform: "sine", vol: 0.2, pan: 0, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
+    osc1: { waveform: "saw", vol: 0.8, pan: -0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
+    osc2: { waveform: "square", vol: 0.4, pan: 0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
+    osc3: { waveform: "sine", vol: 0.2, pan: 0, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
     delay: 0, attack: 0.01, hold: 0, decay: 0.1, sustain: 0.7, release: 0.3, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
     masterGain: 0.7, filterFreq: 3000, filterRes: 0.5, filterType: "lowpass", filterEnv: 3000,
   },
   {
     name: "Warm Pad",
-    osc1: { waveform: "triangle", vol: 0.7, pan: -0.3, detune: 0, octave: 0, unisonVoices: 2, unisonDetune: 2, unisonPhase: 50, phaseMode: "free", unisonBlend: 80, driftAmount: 5 },
-    osc2: { waveform: "saw", vol: 0.3, pan: 0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
-    osc3: { waveform: "sine", vol: 0.15, pan: 0, detune: 0, octave: -1, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
+    osc1: { waveform: "triangle", vol: 0.7, pan: -0.3, detune: 0, octave: 0, unisonVoices: 2, unisonDetune: 2, unisonPhase: 50, phaseMode: "free", unisonBlend: 80, unisonSpread: 50, driftAmount: 5 },
+    osc2: { waveform: "saw", vol: 0.3, pan: 0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
+    osc3: { waveform: "sine", vol: 0.15, pan: 0, detune: 0, octave: -1, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
     delay: 0, attack: 0.3, hold: 0, decay: 0.5, sustain: 0.8, release: 1.0, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
     masterGain: 0.6, filterFreq: 2000, filterRes: 0.3, filterType: "lowpass", filterEnv: 4000,
   },
   {
     name: "Lead",
-    osc1: { waveform: "saw", vol: 0.7, pan: -0.3, detune: 0, octave: 0, unisonVoices: 2, unisonDetune: 3, unisonPhase: 30, phaseMode: "free", unisonBlend: 100, driftAmount: 2 },
-    osc2: { waveform: "square", vol: 0.4, pan: 0.3, detune: 0, octave: 1, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
-    osc3: { waveform: "sine", vol: 0.15, pan: 0, detune: 7, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
+    osc1: { waveform: "saw", vol: 0.7, pan: -0.3, detune: 0, octave: 0, unisonVoices: 2, unisonDetune: 3, unisonPhase: 30, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 2 },
+    osc2: { waveform: "square", vol: 0.4, pan: 0.3, detune: 0, octave: 1, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
+    osc3: { waveform: "sine", vol: 0.15, pan: 0, detune: 7, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
     delay: 0, attack: 0.01, hold: 0, decay: 0.1, sustain: 0.8, release: 0.2, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
     masterGain: 0.7, filterFreq: 5000, filterRes: 0.4, filterType: "lowpass", filterEnv: 5000,
   },
   {
     name: "Sub Bass",
-    osc1: { waveform: "sine", vol: 0.8, pan: 0, detune: 0, octave: -1, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
-    osc2: { waveform: "triangle", vol: 0.3, pan: 0, detune: 0, octave: -1, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
-    osc3: { waveform: "saw", vol: 0.15, pan: 0, detune: 0, octave: -1, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
+    osc1: { waveform: "sine", vol: 0.8, pan: 0, detune: 0, octave: -1, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
+    osc2: { waveform: "triangle", vol: 0.3, pan: 0, detune: 0, octave: -1, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
+    osc3: { waveform: "saw", vol: 0.15, pan: 0, detune: 0, octave: -1, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
     delay: 0, attack: 0.02, hold: 0, decay: 0.2, sustain: 0.9, release: 0.1, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
     masterGain: 0.8, filterFreq: 800, filterRes: 0.5, filterType: "lowpass", filterEnv: 1200,
   },
   {
     name: "Pluck",
-    osc1: { waveform: "saw", vol: 0.5, pan: -0.2, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
-    osc2: { waveform: "square", vol: 0.3, pan: 0.2, detune: 0, octave: 1, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
-    osc3: { waveform: "sine", vol: 0.1, pan: 0, detune: 12, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
+    osc1: { waveform: "saw", vol: 0.5, pan: -0.2, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
+    osc2: { waveform: "square", vol: 0.3, pan: 0.2, detune: 0, octave: 1, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
+    osc3: { waveform: "sine", vol: 0.1, pan: 0, detune: 12, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
     delay: 0, attack: 0.001, hold: 0, decay: 0.05, sustain: 0, release: 0.1, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
     masterGain: 0.6, filterFreq: 4000, filterRes: 0.6, filterType: "lowpass", filterEnv: 6000,
   },
   {
     name: "Brass",
-    osc1: { waveform: "saw", vol: 0.6, pan: -0.5, detune: 0, octave: 0, unisonVoices: 3, unisonDetune: 4, unisonPhase: 50, phaseMode: "free", unisonBlend: 90, driftAmount: 3 },
-    osc2: { waveform: "saw", vol: 0.3, pan: 0.5, detune: 0, octave: 0, unisonVoices: 3, unisonDetune: 4, unisonPhase: 50, phaseMode: "free", unisonBlend: 90, driftAmount: 3 },
-    osc3: { waveform: "square", vol: 0.2, pan: 0, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, driftAmount: 0 },
+    osc1: { waveform: "saw", vol: 0.6, pan: -0.5, detune: 0, octave: 0, unisonVoices: 3, unisonDetune: 4, unisonPhase: 50, phaseMode: "free", unisonBlend: 90, unisonSpread: 50, driftAmount: 3 },
+    osc2: { waveform: "saw", vol: 0.3, pan: 0.5, detune: 0, octave: 0, unisonVoices: 3, unisonDetune: 4, unisonPhase: 50, phaseMode: "free", unisonBlend: 90, unisonSpread: 50, driftAmount: 3 },
+    osc3: { waveform: "square", vol: 0.2, pan: 0, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
     delay: 0, attack: 0.1, hold: 0, decay: 0.3, sustain: 0.7, release: 0.3, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
     masterGain: 0.7, filterFreq: 3000, filterRes: 0.4, filterType: "lowpass", filterEnv: 4000,
   },
@@ -148,6 +148,7 @@ export default function ThreeOscUI({ trackId }: { trackId: string }) {
         unisonPhase: (v: number) => void;
         phaseMode: (e: any) => void;
         unisonBlend: (v: number) => void;
+        unisonSpread: (v: number) => void;
         driftAmount: (v: number) => void;
       }
     >
@@ -165,6 +166,7 @@ export default function ThreeOscUI({ trackId }: { trackId: string }) {
         unisonPhase: (v: number) => update(oscName, "unisonPhase", v),
         phaseMode: (e: any) => update(oscName, "phaseMode", e.target.value),
         unisonBlend: (v: number) => update(oscName, "unisonBlend", v),
+        unisonSpread: (v: number) => update(oscName, "unisonSpread", v),
         driftAmount: (v: number) => update(oscName, "driftAmount", v),
       };
     });
@@ -230,6 +232,7 @@ export default function ThreeOscUI({ trackId }: { trackId: string }) {
       unisonPhase: 50,
       phaseMode: "free" as PhaseMode,
       unisonBlend: 100,
+      unisonSpread: 50,
       driftAmount: 0,
     };
     const cb = oscCallbacks.current[oscName];
@@ -320,7 +323,7 @@ export default function ThreeOscUI({ trackId }: { trackId: string }) {
               label="Uni"
               value={osc.unisonVoices ?? 1}
               min={1}
-              max={8}
+              max={16}
               step={1}
               onChange={cb.unisonVoices}
               onDoubleClick={() => update(oscName, "unisonVoices", 1)}
@@ -360,6 +363,15 @@ export default function ThreeOscUI({ trackId }: { trackId: string }) {
               step={1}
               onChange={cb.unisonBlend}
               onDoubleClick={() => update(oscName, "unisonBlend", 100)}
+            />
+            <SVGKnob
+              label="Sprd"
+              value={osc.unisonSpread ?? 50}
+              min={0}
+              max={100}
+              step={1}
+              onChange={cb.unisonSpread}
+              onDoubleClick={() => update(oscName, "unisonSpread", 50)}
             />
           </KnobGroup>
         </div>

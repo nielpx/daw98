@@ -12,6 +12,7 @@ export interface OscParams {
   unisonPhase: number;
   phaseMode: PhaseMode;
   unisonBlend: number;
+  unisonSpread: number;
   driftAmount: number;
 }
 
@@ -49,17 +50,17 @@ export class ThreeOscSynth {
       osc1: {
         waveform: "saw", vol: 0.8, pan: -0.5, detune: 0, octave: 0,
         unisonVoices: 1, unisonDetune: 1, unisonPhase: 50,
-        phaseMode: "free", unisonBlend: 100, driftAmount: 0,
+        phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0,
       },
       osc2: {
         waveform: "square", vol: 0.4, pan: 0.5, detune: 0, octave: 0,
         unisonVoices: 1, unisonDetune: 1, unisonPhase: 50,
-        phaseMode: "free", unisonBlend: 100, driftAmount: 0,
+        phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0,
       },
       osc3: {
         waveform: "sine", vol: 0.2, pan: 0, detune: 0, octave: 0,
         unisonVoices: 1, unisonDetune: 1, unisonPhase: 50,
-        phaseMode: "free", unisonBlend: 100, driftAmount: 0,
+        phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0,
       },
       delay: 0, attack: 0.01, hold: 0, decay: 0.1, sustain: 0.7, release: 0.3, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
       masterGain: 0.7,
