@@ -62,7 +62,7 @@ export class ThreeOscSynth {
         unisonVoices: 1, unisonDetune: 1, unisonPhase: 50,
         phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0,
       },
-      delay: 0, attack: 0.01, hold: 0, decay: 0.1, sustain: 0.7, release: 0.3, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
+      delay: 0, attack: 0, hold: 0, decay: 0, sustain: 1, release: 0, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
       masterGain: 0.7,
       filterFreq: 3000, filterRes: 0.5, filterType: "lowpass", filterEnv: 3000,
     };

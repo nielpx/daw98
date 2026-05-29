@@ -34,7 +34,7 @@ const PRESETS: PresetData[] = [
     osc1: { waveform: "saw", vol: 0.8, pan: -0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
     osc2: { waveform: "square", vol: 0.4, pan: 0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
     osc3: { waveform: "sine", vol: 0.2, pan: 0, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: "free", unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
-    delay: 0, attack: 0.01, hold: 0, decay: 0.1, sustain: 0.7, release: 0.3, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
+    delay: 0, attack: 0, hold: 0, decay: 0, sustain: 1, release: 0, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
     masterGain: 0.7, filterFreq: 3000, filterRes: 0.5, filterType: "lowpass", filterEnv: 3000,
   },
   {
@@ -330,7 +330,7 @@ export default function ThreeOscUI({ trackId }: { trackId: string }) {
             />
             <SVGKnob
               label="Dtn"
-              value={osc.unisonDetune ?? 6}
+              value={osc.unisonDetune ?? 1}
               min={0}
               max={100}
               step={1}
@@ -407,11 +407,11 @@ export default function ThreeOscUI({ trackId }: { trackId: string }) {
 
   const renderEnvelope = () => {
     const dl = params.delay ?? 0;
-    const a = params.attack ?? 0.01;
+    const a = params.attack ?? 0;
     const h = params.hold ?? 0;
-    const d = params.decay ?? 0.1;
-    const s = params.sustain ?? 0.7;
-    const r = params.release ?? 0.3;
+    const d = params.decay ?? 0;
+    const s = params.sustain ?? 1;
+    const r = params.release ?? 0;
     const ac = params.attackCurve ?? 0.5;
     const dc = params.decayCurve ?? 0.5;
     const rc = params.releaseCurve ?? 0.5;
@@ -419,11 +419,11 @@ export default function ThreeOscUI({ trackId }: { trackId: string }) {
       <div className="flex flex-col items-center gap-2">
         <div className="flex flex-wrap justify-center gap-2">
           <SVGKnob label="Delay" value={dl} min={0} max={5} step={0.001} onChange={(v) => envUpdate("delay", v)} onDoubleClick={() => envUpdate("delay", 0)} />
-          <SVGKnob label="Attack" value={a} min={0.001} max={10} step={0.001} onChange={(v) => envUpdate("attack", v)} onDoubleClick={() => envUpdate("attack", 0.01)} />
+          <SVGKnob label="Attack" value={a} min={0} max={10} step={0.001} onChange={(v) => envUpdate("attack", v)} onDoubleClick={() => envUpdate("attack", 0)} />
           <SVGKnob label="Hold" value={h} min={0} max={5} step={0.001} onChange={(v) => envUpdate("hold", v)} onDoubleClick={() => envUpdate("hold", 0)} />
-          <SVGKnob label="Decay" value={d} min={0.001} max={10} step={0.001} onChange={(v) => envUpdate("decay", v)} onDoubleClick={() => envUpdate("decay", 0.1)} />
-          <SVGKnob label="Sustain" value={s} min={0} max={1} step={0.01} onChange={(v) => envUpdate("sustain", v)} onDoubleClick={() => envUpdate("sustain", 0.7)} />
-          <SVGKnob label="Release" value={r} min={0.001} max={10} step={0.001} onChange={(v) => envUpdate("release", v)} onDoubleClick={() => envUpdate("release", 0.3)} />
+          <SVGKnob label="Decay" value={d} min={0} max={10} step={0.001} onChange={(v) => envUpdate("decay", v)} onDoubleClick={() => envUpdate("decay", 0)} />
+          <SVGKnob label="Sustain" value={s} min={0} max={1} step={0.01} onChange={(v) => envUpdate("sustain", v)} onDoubleClick={() => envUpdate("sustain", 1)} />
+          <SVGKnob label="Release" value={r} min={0} max={10} step={0.001} onChange={(v) => envUpdate("release", v)} onDoubleClick={() => envUpdate("release", 0)} />
           <SVGKnob label="A.Crv" value={ac} min={0} max={1} step={0.01} onChange={(v) => envUpdate("attackCurve", v)} onDoubleClick={() => envUpdate("attackCurve", 0.5)} />
           <SVGKnob label="D.Crv" value={dc} min={0} max={1} step={0.01} onChange={(v) => envUpdate("decayCurve", v)} onDoubleClick={() => envUpdate("decayCurve", 0.5)} />
           <SVGKnob label="R.Crv" value={rc} min={0} max={1} step={0.01} onChange={(v) => envUpdate("releaseCurve", v)} onDoubleClick={() => envUpdate("releaseCurve", 0.5)} />

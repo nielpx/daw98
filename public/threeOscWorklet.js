@@ -54,6 +54,12 @@ var BQ = {
     var a0i = 1 / (1 + a);
     return { b0: a * a0i, b1: 0, b2: -a * a0i, a1: -2 * Math.cos(w) * a0i, a2: (1 - a) * a0i, };
   },
+  notchCoefs: function(cut, res, sr) {
+    var w = 2 * Math.PI * cl(cut, 1, sr / 2) / sr;
+    var c = Math.cos(w), a = Math.sin(w) / cl(res < 0.001 ? 0.5 : res, 0.05, 50);
+    var a0i = 1 / (1 + a);
+    return { b0: a0i, b1: -2 * c * a0i, b2: a0i, a1: -2 * c * a0i, a2: (1 - a) * a0i, };
+  },
   tick: function(s, c, st) {
     var o = c.b0 * s + c.b1 * st.x1 + c.b2 * st.x2 - c.a1 * st.y1 - c.a2 * st.y2;
     st.x2 = st.x1; st.x1 = s; st.y2 = st.y1; st.y1 = o; return o;
@@ -71,7 +77,7 @@ class ThreeOscProcessor extends AudioWorkletProcessor {
       osc1: { waveform: 'saw', vol: 0.8, pan: -0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: 'free', unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
       osc2: { waveform: 'square', vol: 0.4, pan: 0.5, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: 'free', unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
       osc3: { waveform: 'sine', vol: 0.2, pan: 0, detune: 0, octave: 0, unisonVoices: 1, unisonDetune: 1, unisonPhase: 50, phaseMode: 'free', unisonBlend: 100, unisonSpread: 50, driftAmount: 0 },
-      delay: 0, attack: 0.01, hold: 0, decay: 0.1, sustain: 0.7, release: 0.3, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
+      delay: 0, attack: 0, hold: 0, decay: 0, sustain: 1, release: 0, attackCurve: 0.5, decayCurve: 0.5, releaseCurve: 0.5,
       filterFreq: 3000, filterRes: 0.5, filterType: 0, filterEnv: 3000,
       masterGain: 0.7,
     };
@@ -89,12 +95,22 @@ class ThreeOscProcessor extends AudioWorkletProcessor {
     this.vFb = new Float64Array(MAX_VOICES);
     // Biquad state: x1L,x2L,y1L,y2L, x1R,x2R,y1R,y2R
     this.vBq = new Float64Array(MAX_VOICES * 8);
-    // Phases: [voice*24 + osc*8 + unison]
-    this.vPh = new Float64Array(MAX_VOICES * 24);
+    // Phases: [voice*48 + osc*16 + unison] — 16 max unison per osc
+    this.vPh = new Float64Array(MAX_VOICES * 48);
     // Drift offsets
-    this.vDr = new Float64Array(MAX_VOICES * 24);
+    this.vDr = new Float64Array(MAX_VOICES * 48);
     // Unison count per osc: [voice*3 + osc]
     this.vUn = new Uint8Array(MAX_VOICES * 3);
+    // Per-voice envelope params (captured at note-on to prevent parameter-change artifacts)
+    this.vEnvDelay = new Float64Array(MAX_VOICES);
+    this.vEnvA = new Float64Array(MAX_VOICES);
+    this.vEnvH = new Float64Array(MAX_VOICES);
+    this.vEnvD = new Float64Array(MAX_VOICES);
+    this.vEnvS = new Float64Array(MAX_VOICES);
+    this.vEnvR = new Float64Array(MAX_VOICES);
+    this.vEnvAC = new Float64Array(MAX_VOICES);
+    this.vEnvDC = new Float64Array(MAX_VOICES);
+    this.vEnvRC = new Float64Array(MAX_VOICES);
 
     this.port.onmessage = this.onMessage.bind(this);
   }
@@ -118,6 +134,7 @@ class ThreeOscProcessor extends AudioWorkletProcessor {
       if (p.filterType === 'lowpass' || p.filterType === 0) this.p.filterType = 0;
       else if (p.filterType === 'highpass') this.p.filterType = 1;
       else if (p.filterType === 'bandpass') this.p.filterType = 2;
+      else if (p.filterType === 'notch') this.p.filterType = 3;
     }
     if (p.filterEnv !== undefined) this.p.filterEnv = p.filterEnv;
     if (p.masterGain !== undefined) this.p.masterGain = p.masterGain;
@@ -125,6 +142,9 @@ class ThreeOscProcessor extends AudioWorkletProcessor {
 
   allocV() {
     for (var v = 0; v < MAX_VOICES; v++) if (!this.vOn[v]) return v;
+    // Prefer voices in release stage (ep === 5) to avoid clicks
+    for (var v = 0; v < MAX_VOICES; v++) if (this.vEp[v] === 5) return v;
+    // Otherwise steal oldest-sounding voice
     var o = 0, f = this.vSf[0];
     for (var v = 1; v < MAX_VOICES; v++) { if (this.vSf[v] < f) { o = v; f = this.vSf[v]; } }
     return o;
@@ -137,6 +157,15 @@ class ThreeOscProcessor extends AudioWorkletProcessor {
     this.vRf[v] = -1; this.vRv[v] = 0;
     this.vEp[v] = 0; this.vEv[v] = 0;
     this.vFb[v] = this.p.filterFreq;
+    this.vEnvDelay[v] = this.p.delay;
+    this.vEnvA[v] = this.p.attack;
+    this.vEnvH[v] = this.p.hold;
+    this.vEnvD[v] = this.p.decay;
+    this.vEnvS[v] = this.p.sustain;
+    this.vEnvR[v] = this.p.release;
+    this.vEnvAC[v] = this.p.attackCurve;
+    this.vEnvDC[v] = this.p.decayCurve;
+    this.vEnvRC[v] = this.p.releaseCurve;
     for (var i = 0; i < 8; i++) this.vBq[v * 8 + i] = 0;
 
     var on = ['osc1','osc2','osc3'];
@@ -149,7 +178,7 @@ class ThreeOscProcessor extends AudioWorkletProcessor {
       var da = (osc && osc.driftAmount !== undefined ? osc.driftAmount : 0) / 100;
       var ms = 0.001;
       for (var u = 0; u < n; u++) {
-        var idx = v * 24 + o * 8 + u;
+        var idx = v * 48 + o * 16 + u;
         if (pm === 'fixed') { var pos = vPos(u, n); this.vPh[idx] = (pos * 0.5 + 0.5) * Math.max(ms, pa); }
         else if (pm === 'random') this.vPh[idx] = Math.random();
         else this.vPh[idx] = Math.random() * Math.max(ms, pa);
@@ -201,8 +230,8 @@ class ThreeOscProcessor extends AudioWorkletProcessor {
       var ep = this.vEp[v], ev = this.vEv[v];
       var fb = this.vFb[v];
       var bqOff = v * 8;
-      var pDelay = this.p.delay, pA = this.p.attack, pHold = this.p.hold, pD = this.p.decay, pS = this.p.sustain, pR = this.p.release;
-      var pAC = this.p.attackCurve, pDC = this.p.decayCurve, pRC = this.p.releaseCurve;
+      var pDelay = this.vEnvDelay[v], pA = this.vEnvA[v], pHold = this.vEnvH[v], pD = this.vEnvD[v], pS = this.vEnvS[v], pR = this.vEnvR[v];
+      var pAC = this.vEnvAC[v], pDC = this.vEnvDC[v], pRC = this.vEnvRC[v];
       var aExp = Math.pow(2, 2 * (1 - 2 * pAC));
       var dExp = Math.pow(2, 2 * (1 - 2 * pDC));
       var rExp = Math.pow(2, 2 * (1 - 2 * pRC));
@@ -222,7 +251,7 @@ class ThreeOscProcessor extends AudioWorkletProcessor {
 
         // ADSR (6-stage: delay → attack → hold → decay → sustain → release)
         if (ep === 0) { ev = 0; if (ls >= pDelay) { ep = 1; this.vEp[v] = 1; } }
-        if (ep === 1) { var aT = ls - pDelay; var aP = pA > 0 ? aT / pA : 1; ev = Math.pow(Math.min(1, aP), aExp); if (aT >= pA) { ep = 2; this.vEp[v] = 2; } }
+        if (ep === 1) { var aT = ls - pDelay; var effA = Math.max(pA, 0.002); var aP = effA > 0 ? aT / effA : 1; ev = Math.pow(Math.min(1, aP), aExp); if (aT >= effA) { ep = 2; this.vEp[v] = 2; } }
         if (ep === 2) { var hT = ls - pDelay - pA; ev = 1; if (hT >= pHold) { ep = 3; this.vEp[v] = 3; } }
         if (ep === 3) { var dT = ls - pDelay - pA - pHold; var dP = pD > 0 ? dT / pD : 1; ev = pS + (1 - pS) * Math.max(0, Math.pow(1 - dP, dExp)); if (dP >= 1) { ep = 4; this.vEp[v] = 4; } }
         if (ep === 4) { ev = pS; }
@@ -236,6 +265,7 @@ class ThreeOscProcessor extends AudioWorkletProcessor {
         var coefs;
         if (fTyp === 1) coefs = BQ.hpCoefs(cut, fRes, sr);
         else if (fTyp === 2) coefs = BQ.bpCoefs(cut, fRes, sr);
+        else if (fTyp === 3) coefs = BQ.notchCoefs(cut, fRes, sr);
         else coefs = BQ.lpCoefs(cut, fRes, sr);
 
         var sL = 0, sR = 0;
@@ -256,7 +286,7 @@ class ThreeOscProcessor extends AudioWorkletProcessor {
           var bf = 440 * Math.pow(2, (pch + oct * 12 - 69) / 12);
 
           for (var u = 0; u < nu; u++) {
-            var idx = v * 24 + oi * 8 + u;
+            var idx = v * 48 + oi * 16 + u;
             var ph = this.vPh[idx];
             var pos = vPos(u, nu);
             var vd = vDet(u, nu, dc, bd);
